@@ -41,7 +41,8 @@ async def account_info(interaction:discord.Interaction, user:discord.User=None):
     try:
         breads = data[interaction.guild.id][interaction.user.id]
     except:
-        data[interaction.guild.id] = {}
+        if interaction.guild.id not in data:
+            data[interaction.guild.id] = {}
         data[interaction.guild.id][interaction.user.id] = 0
         breads = 0
         saveData(DATA_FILE, data)
