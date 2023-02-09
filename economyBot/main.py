@@ -17,6 +17,7 @@ def saveData(dataFile:str, data:dict):
         json.dump(data, file)
 
 TOKEN = loadData("token.json")["token"]
+data = loadData(DATA_FILE)
 
 bot = commands.Bot(command_prefix="!", intents = discord.Intents.all())
 
@@ -32,5 +33,18 @@ async def on_ready():
 @bot.tree.command(name="ping")
 async def ping(interaction:discord.Interaction):
     await interaction.response.send_message(f"Pong! You are in {interaction.guild.name} server.")
+
+@bot.tree.command(name="account_info")
+async def account_info(interaction:discord.Interaction, user:discord.User=None):
+    if user == None:
+        user = interaction.user
+    try:
+        breads = data[interaction.guild.id][interaction.user.id]
+    except:
+        data[interaction.guild.id] = {}
+        data[interaction.guild.id][interaction.user.id] = 0
+        breads = 0
+        saveData(DATA_FILE, data)
+    await interaction.response.send_message(f"{user.name} has {breads} breads.")
 
 bot.run(TOKEN)
