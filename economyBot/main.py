@@ -5,32 +5,30 @@ import random
 
 DATA_FILE = "data.json"
 
-def loadData(dataFile:str):
+def loadData(filePath:str):
     try:
-        with open(dataFile, "r") as file:
+        with open(filePath, "r") as file:
             return(json.load(file))
     except:
         return {}
 
-def saveData(dataFile:str, data:dict):
-    with open(dataFile, "w") as file:
+def saveData(filePath:str, data:dict):
+    with open(filePath, "w") as file:
         json.dump(data, file)
 
-def loadBreads(interaction:discord.Interaction, member:discord.Member, data:dict):
-    if interaction.guild.id not in data:
-        data[interaction.guild.id] = {}
-    if member.id not in data[interaction.guild.id]:
-        data[interaction.guild.id][member.id] = 0
+def loadBreads(guildID:discord.Interaction.guild_id, memberID:discord.Member.id, data:dict):
+    if str(guildID) not in data:
+        data[str(guildID)] = {}
+        data[str(guildID)][str(memberID)] = 0
         saveData(DATA_FILE, data)
         return 0
-    return data[interaction.guild.id][member.id]
-
-def saveBreads(breads:int, data:dict, interaction:discord.Interaction):
-    data[interaction.guild.id][interaction.user.id] = breads
-    saveData(DATA_FILE, data)
+    if str(memberID) not in data[str(guildID)]:
+        data[str(guildID)][str(memberID)] = 0
+        saveData(DATA_FILE, data)
+        return 0
+    return data[str(guildID)][str(memberID)]
 
 TOKEN = loadData("token.json")["token"]
-data = loadData(DATA_FILE)
 
 bot = commands.Bot(command_prefix="!", intents = discord.Intents.all())
 
@@ -51,12 +49,14 @@ async def ping(interaction:discord.Interaction):
 async def account_info(interaction:discord.Interaction, member:discord.Member=None):
     if member == None:
         member = interaction.user
-    breads = loadBreads(interaction, member, data)
+    data = loadData(DATA_FILE)
+    breads = loadBreads(interaction.guild_id, member.id, data)
     await interaction.response.send_message(f"{member.name} has {breads} breads.")
 
 @bot.tree.command(name="guess_number", description="Guess the correct number(0/1) to win/lose breads!")
 async def guess_number(interaction:discord.Interaction, guess:int):
-    breads = loadBreads(interaction, interaction.user, data)
+    data = loadData(DATA_FILE)
+    breads = loadBreads(interaction.guild_id, interaction.user.id, data)
     num = random.choice([0, 1])
     if num == guess:
         breads += 5
@@ -64,6 +64,7 @@ async def guess_number(interaction:discord.Interaction, guess:int):
     else:
         breads -= 5
         await interaction.response.send_message("Wrong, You lost 5 breads. D:")
-    saveBreads(breads, data, interaction)
+    data[str(interaction.guild.id)][str(interaction.user.id)] = breads
+    saveData(DATA_FILE, data)
 
 bot.run(TOKEN)
