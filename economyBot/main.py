@@ -52,30 +52,35 @@ async def ping(interaction:discord.Interaction):
 
 @bot.tree.command(name="account_info", description="Get account information of a member or yourself")
 async def account_info(interaction:discord.Interaction, member:discord.Member=None):
+    if member != None and member.bot:
+        await interaction.response.send_message(f"{member.name} is a bot.")
+        return
     if member == None:
         member = interaction.user
     data = loadData(DATA_FILE)
     breads = loadBreads(interaction.guild_id, member.id, data)
     await interaction.response.send_message(f"{member.name} has {breads} breads.")
 
-@bot.tree.command(name="gamble", description="Guess the correct number(0/1) to win/lose breads!")
-async def gamble(interaction:discord.Interaction, guess:int):
+@bot.tree.command(name="gamble", description="Gamble breads!")
+async def gamble(interaction:discord.Interaction, gamble_breads:int):
     data = loadData(DATA_FILE)
     breads = loadBreads(interaction.guild_id, interaction.user.id, data)
-    num = random.choice([0, 1])
-    if num == guess:
-        breads += 1
-        await interaction.response.send_message("Correct! You won a bread. :D")
+    if gamble_breads > breads:
+        await interaction.response.send_message(f"You can't gamble more than what you have!")
     else:
-        if breads > 0:
-            breads -= 1
-            await interaction.response.send_message("Wrong, You lost a bread. D:")
+        wonBreads = random.randrange(gamble_breads * (-1), gamble_breads + 1)
+        breads += wonBreads
+        if wonBreads >= 0:
+            await interaction.response.send_message(f"You won {wonBreads} breads! :D")
         else:
-            await interaction.response.send_message(f"Wrong, Try again. D:")
+            await interaction.response.send_message(f"You lost {wonBreads * -1} breads. D:")
     saveBreads(interaction.guild.id, interaction.user.id, data, breads)
 
 @bot.tree.command(name="rob", description="Rob a member!")
 async def rob(interaction:discord.Interaction, member:discord.Member):
+    if member.bot:
+        await interaction.response.send_message(f"You can't rob a bot.")
+        return
     if member.id != interaction.user.id:
         data = loadData(DATA_FILE)
         robberBreads = loadBreads(interaction.guild.id, interaction.user.id, data)
@@ -94,4 +99,20 @@ async def rob(interaction:discord.Interaction, member:discord.Member):
             await interaction.response.send_message(f"LMAO, {member} is broke.")
     else:
         await interaction.response.send_message("You can't rob yourself.")
+
+@bot.tree.command(name="leaderboard", description="See who has the most breads!")
+async def leaderboard(interaction:discord.Interaction):
+    data = loadData(DATA_FILE)
+    guildDict = data[str(interaction.guild.id)]
+    values = list(guildDict.values())
+    keys = list(guildDict.keys())
+    for i in range(len(values) - 1):
+        for j in range(i, len(values)):
+            if values[j] > values[i]:
+                values[i], values[j] = values[j], values[i]
+                keys[i], keys[j] = keys[j], keys[i]
+    guildDict = {}
+    for i in range(len(keys)):
+        guildDict[f"{bot.get_user(int(keys[i])).name}"] = values[i]
+    await interaction.response.send_message(f"{guildDict}")
 bot.run(TOKEN)
