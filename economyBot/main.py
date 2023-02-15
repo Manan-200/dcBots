@@ -63,6 +63,15 @@ async def balance(interaction:discord.Interaction, member:discord.Member=None):
     breads = loadBreads(interaction.guild_id, member.id, data)
     await interaction.response.send_message(f"{member.name} has {breads} breads.")
 
+@bot.tree.command(name="guild_init", description="Initialize guild data")
+async def guild_init(interaction:discord.Interaction):
+    data = loadData(DATA_FILE)
+    members = interaction.guild.members
+    for member in members:
+        if member.bot != True:
+            loadBreads(interaction.guild.id, member.id, data)
+    await interaction.response.send_message(f"Data updated successfully")
+
 @bot.tree.command(name="gamble", description="Gamble breads!")
 async def gamble(interaction:discord.Interaction, gamble_breads:int):
     data = loadData(DATA_FILE)
