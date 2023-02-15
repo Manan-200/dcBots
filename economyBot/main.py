@@ -4,7 +4,7 @@ import json
 import random
 
 DATA_FILE = "data.json"
-initialBreads = 10
+initialBreads = 100
 
 def loadData(filePath:str):
     try:
@@ -20,17 +20,19 @@ def saveData(filePath:str, data:dict):
 def loadBreads(guildID:discord.Interaction.guild_id, memberID:discord.Member.id, data:dict):
     if str(guildID) not in data:
         data[str(guildID)] = {}
-        data[str(guildID)][str(memberID)] = initialBreads
+        data[str(guildID)][str(memberID)] = {}
+        data[str(guildID)][str(memberID)]["breads"] = initialBreads
         saveData(DATA_FILE, data)
         return initialBreads
     if str(memberID) not in data[str(guildID)]:
-        data[str(guildID)][str(memberID)] = initialBreads
+        data[str(guildID)][str(memberID)] = {}
+        data[str(guildID)][str(memberID)]["breads"] = initialBreads
         saveData(DATA_FILE, data)
         return initialBreads
-    return data[str(guildID)][str(memberID)]
+    return data[str(guildID)][str(memberID)]["breads"]
 
 def saveBreads(guildID:discord.Interaction.guild_id, memberID:discord.Member.id, data:dict, breads:int):
-    data[str(guildID)][str(memberID)] = breads
+    data[str(guildID)][str(memberID)]["breads"] = breads
     saveData(DATA_FILE, data)
 
 TOKEN = loadData("token.json")["token"]
@@ -81,38 +83,48 @@ async def rob(interaction:discord.Interaction, member:discord.Member):
     if member.bot:
         await interaction.response.send_message(f"You can't rob a bot.")
         return
-    if member.id != interaction.user.id:
-        data = loadData(DATA_FILE)
-        robberBreads = loadBreads(interaction.guild.id, interaction.user.id, data)
-        memberBreads = loadBreads(interaction.guild.id, member.id, data)
-        if memberBreads != 0:
-            breads = random.randrange(-5, 6)
-            robberBreads += breads
-            memberBreads -= breads
-            if breads >= 0:
-                await interaction.response.send_message(f"{interaction.user.name} robbed {breads} breads from {member.name}!")
-            else:
-                await interaction.response.send_message(f"{member.name} reverse robbed {breads*-1} breads from {interaction.user.name}!")
-            saveBreads(interaction.guild.id, interaction.user.id, data, robberBreads)
-            saveBreads(interaction.guild.id, member.id, data, memberBreads)
-        else:
-            await interaction.response.send_message(f"LMAO, {member} is broke.")
-    else:
+
+    if member.id == interaction.user.id:
         await interaction.response.send_message("You can't rob yourself.")
+        return
+
+    data = loadData(DATA_FILE)
+    robberBreads = loadBreads(interaction.guild.id, interaction.user.id, data)
+    memberBreads = loadBreads(interaction.guild.id, member.id, data)
+
+    breadPercent = random.randrange(-10, 11)
+    if breadPercent >= 0:
+        stolenBreads =  int(memberBreads*breadPercent/100)
+        await interaction.response.send_message(f"{interaction.user.name} robbed {stolenBreads} breads from {member.name}")
+    elif breadPercent < 0:
+        stolenBreads =  int(robberBreads*breadPercent/100)
+        await interaction.response.send_message(f"{member.name} reverse robbed {-(stolenBreads)} from {interaction.user.name}")
+
+    robberBreads += stolenBreads
+    memberBreads -= stolenBreads
+
+    saveBreads(interaction.guild.id, interaction.user.id, data, robberBreads)
+    saveBreads(interaction.guild.id, member.id, data, memberBreads)
 
 @bot.tree.command(name="leaderboard", description="See who has the most breads!")
 async def leaderboard(interaction:discord.Interaction):
     data = loadData(DATA_FILE)
     guildDict = data[str(interaction.guild.id)]
-    values = list(guildDict.values())
-    keys = list(guildDict.keys())
-    for i in range(len(values) - 1):
-        for j in range(i, len(values)):
-            if values[j] > values[i]:
-                values[i], values[j] = values[j], values[i]
-                keys[i], keys[j] = keys[j], keys[i]
+    breadArr = []
+    userArr = []
+    for key in guildDict:
+        breadArr.append(guildDict[key]["breads"])
+        userArr.append(int(key))
+    for i in range(len(breadArr) - 1):
+        for j in range(i, len(userArr)):
+            if breadArr[j] > breadArr[i]:
+                breadArr[i], breadArr[j] = breadArr[j], breadArr[i]
+                userArr[i], userArr[j] = userArr[j], userArr[i]
+
     guildDict = {}
-    for i in range(len(keys)):
-        guildDict[f"{bot.get_user(int(keys[i])).name}"] = values[i]
+    for i in range(len(breadArr)):
+        guildDict[str(bot.get_user(userArr[i]).name)] = breadArr[i]
+
     await interaction.response.send_message(f"{guildDict}")
+
 bot.run(TOKEN)
