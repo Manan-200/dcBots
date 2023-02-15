@@ -50,8 +50,8 @@ async def on_ready():
 async def ping(interaction:discord.Interaction):
     await interaction.response.send_message(f"Pong! You are in {interaction.guild.name} server.")
 
-@bot.tree.command(name="account_info", description="Get account information of a member or yourself")
-async def account_info(interaction:discord.Interaction, member:discord.Member=None):
+@bot.tree.command(name="balance", description="Get account information of a member or yourself")
+async def balance(interaction:discord.Interaction, member:discord.Member=None):
     if member != None and member.bot:
         await interaction.response.send_message(f"{member.name} is a bot.")
         return
