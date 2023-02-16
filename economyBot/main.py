@@ -118,21 +118,22 @@ async def rob(interaction:discord.Interaction, member:discord.Member):
 @bot.tree.command(name="leaderboard", description="See who has the most breads!")
 async def leaderboard(interaction:discord.Interaction):
     data = loadData(DATA_FILE)
-    guildDict = data[str(interaction.guild.id)]
+    
+    memberArr = []
     breadArr = []
-    userArr = []
-    for key in guildDict:
-        breadArr.append(guildDict[key]["breads"])
-        userArr.append(int(key))
+    for member in interaction.guild.members:
+        if member.bot != True:
+            memberArr.append(member.name)
+            breadArr.append(loadBreads(interaction.guild.id, member.id, data))
+    
     for i in range(len(breadArr) - 1):
-        for j in range(i, len(userArr)):
+        for j in range(i, len(breadArr)):
             if breadArr[j] > breadArr[i]:
                 breadArr[i], breadArr[j] = breadArr[j], breadArr[i]
-                userArr[i], userArr[j] = userArr[j], userArr[i]
-
+                memberArr[i], memberArr[j] = memberArr[j], memberArr[i]
     guildDict = {}
     for i in range(len(breadArr)):
-        guildDict[str(bot.get_user(userArr[i]).name)] = breadArr[i]
+        guildDict[memberArr[i]] = breadArr[i]
 
     await interaction.response.send_message(f"{guildDict}")
 
