@@ -24,7 +24,7 @@ async def printCommit():
             newCommit = repo.get_commits()[0]
             if oldCommit != newCommit:
                 oldCommit = newCommit
-                await channel.send(f"New commit by {newCommit.commit.author.name} on {newCommit.repository.name}: '{newCommit.commit.message}'")
+                await channel.send(f"New commit by {newCommit.commit.author.name} on {newCommit.repo.name}: '{newCommit.commit.message}'")
 
 @bot.event
 async def on_ready():
