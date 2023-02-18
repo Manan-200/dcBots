@@ -3,17 +3,37 @@ from github import Github
 import json
 import discord
 
-with open("token.json", "r") as file:
-    data = json.load(file)
-    gitToken = data["git"]
-    botToken = data["bot"]
+def loadData(filePath:str):
+    try:
+        with open(filePath, 'r') as file:
+            return(json.load(file))
+    except:
+        return {}
+def saveData(filePath:str, data:dict):
+    with open(filePath, 'w') as file:
+        json.dump(data, file)
+
+DATA_FILE = "data.json"
+
+tokenData = loadData("tokens.json")
+gitToken = tokenData["git"]
+botToken = tokenData["bot"]
 
 g = Github(gitToken)
 repo = g.get_repo("Manan-200/dcBots")
-n = 0
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
 oldCommit = repo.get_commits()[0]
+
+@bot.event
+async def on_ready():
+    print(f"Logged in as {bot.user}")
+    try:
+        synced = await bot.tree.sync()
+        print(f"Synced {len(synced)} command(s)")
+        printCommit.start()
+    except Exception as e:
+        print(e)
 
 @tasks.loop(minutes=1)
 async def printCommit():
@@ -26,14 +46,13 @@ async def printCommit():
                 oldCommit = newCommit
                 await channel.send(f"New commit by {newCommit.commit.author.name} on {repo.name}: '{newCommit.commit.message}'")
 
-@bot.event
-async def on_ready():
-    print(f"Logged in as {bot.user}")
-    try:
-        synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} command(s)")
-        printCommit.start()
-    except Exception as e:
-        print(e)
+@bot.tree.command(name="track_file", description="Add a file to tracking list")
+async def track_file(interaction:discord.Interaction, file:str):
+    data = loadData(DATA_FILE)
+    if len(data) == 0:
+        data = {"files": []}
+    data["files"].append(file)
+    saveData(DATA_FILE, data)
+    await interaction.response.send_message(f"Added {file} to tracking list.")
 
 bot.run(botToken)
