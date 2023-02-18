@@ -55,4 +55,14 @@ async def track_file(interaction:discord.Interaction, file:str):
     saveData(DATA_FILE, data)
     await interaction.response.send_message(f"Added {file} to tracking list.")
 
+@bot.tree.command(name="untrack_file", description="Remove a file from tracking list")
+async def untrack_file(interaction:discord.Interaction, file:str):
+    data = loadData(DATA_FILE)
+    try:
+        data["files"].remove(file)
+        saveData(DATA_FILE, data)
+        await interaction.response.send_message(f"Removed {file} from tracking list")
+    except:
+        await interaction.response.send_message(f"{file} is not in the tracking list")
+
 bot.run(botToken)
