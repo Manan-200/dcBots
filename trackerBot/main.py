@@ -44,7 +44,7 @@ async def printCommit():
                 oldNodeID = data[repo_name]["nodeID"]
                 newNodeID = repo.get_commits()[0].sha
                 if newNodeID != oldNodeID:
-                    await channel.send(f"New commit by {repo.get_commits[0].commit.author.name} on {repo.name}: '{repo.get_commits[0].commit.message}'")
+                    await channel.send(f"New commit by {repo.get_commits()[0].commit.author.name} on {repo.name}: '{repo.get_commits()[0].commit.message}'")
                     data[repo_name]["nodeID"] = newNodeID
                     saveData(DATA_FILE, data)
 
