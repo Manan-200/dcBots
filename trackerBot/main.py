@@ -2,6 +2,7 @@ from discord.ext import commands, tasks
 from github import Github
 import json
 import discord
+import requests
 
 def loadData(filePath:str):
     try:
@@ -18,6 +19,7 @@ DATA_FILE = "data.json"
 tokenData = loadData("tokens.json")
 gitToken = tokenData["git"]
 botToken = tokenData["bot"]
+headers = {"Authorization": gitToken}
 
 g = Github(gitToken)
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
@@ -50,8 +52,19 @@ async def printCommit():
 
 @bot.tree.command(name="track_file", description="Add a file to tracking list")
 async def track_file(interaction:discord.Interaction, author:str, repo_name:str):
+    
+    path = f"{author}/{repo_name}"
+    url = f"https://api.github.com/repos/{path}"
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        await interaction.response.send_message("Repository does not exist")
+        return
+    
     data = loadData(DATA_FILE)
-    repo = g.get_repo(f"{author}/{repo_name}")
+    if repo_name in data:
+        await interaction.response.send_message("Repository is already tracking list")
+        return
+    repo = g.get_repo(path)
     data[repo_name] = {"nodeID":f"{repo.get_commits()[0].sha}", "author":f"{author}"}
     saveData(DATA_FILE, data)
     await interaction.response.send_message(f"Added {repo_name} to tracking list.")
