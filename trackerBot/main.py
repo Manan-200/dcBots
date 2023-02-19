@@ -20,10 +20,7 @@ gitToken = tokenData["git"]
 botToken = tokenData["bot"]
 
 g = Github(gitToken)
-repo = g.get_repo("Manan-200/dcBots")
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
-
-oldCommit = repo.get_commits()[0]
 
 @bot.event
 async def on_ready():
@@ -41,28 +38,32 @@ async def printCommit():
     for guild in bot.guilds:
         channel = discord.utils.get(guild.channels, name="git")
         if channel:
-            newCommit = repo.get_commits()[0]
-            if oldCommit != newCommit:
-                oldCommit = newCommit
-                await channel.send(f"New commit by {newCommit.commit.author.name} on {repo.name}: '{newCommit.commit.message}'")
+            data = loadData(DATA_FILE)
+            for repo_name in data:
+                repo = g.get_repo(f'{data[repo_name]["author"]}/{repo_name}')
+                oldNodeID = data[repo_name]["nodeID"]
+                newNodeID = repo.get_commits()[0].sha
+                if newNodeID != oldNodeID:
+                    await channel.send(f"New commit by {repo.get_commits[0].commit.author.name} on {repo.name}: '{repo.get_commits[0].commit.message}'")
+                    data[repo_name]["nodeID"] = newNodeID
+                    saveData(DATA_FILE, data)
 
 @bot.tree.command(name="track_file", description="Add a file to tracking list")
-async def track_file(interaction:discord.Interaction, file:str):
+async def track_file(interaction:discord.Interaction, author:str, repo_name:str):
     data = loadData(DATA_FILE)
-    if len(data) == 0:
-        data = {"files": []}
-    data["files"].append(file)
+    repo = g.get_repo(f"{author}/{repo_name}")
+    data[repo_name] = {"nodeID":f"{repo.get_commits()[0].sha}", "author":f"{author}"}
     saveData(DATA_FILE, data)
-    await interaction.response.send_message(f"Added {file} to tracking list.")
+    await interaction.response.send_message(f"Added {repo_name} to tracking list.")
 
 @bot.tree.command(name="untrack_file", description="Remove a file from tracking list")
-async def untrack_file(interaction:discord.Interaction, file:str):
+async def untrack_file(interaction:discord.Interaction, repo_name:str):
     data = loadData(DATA_FILE)
-    try:
-        data["files"].remove(file)
+    if repo_name in data:
+        del data[repo_name]
         saveData(DATA_FILE, data)
-        await interaction.response.send_message(f"Removed {file} from tracking list")
-    except:
-        await interaction.response.send_message(f"{file} is not in the tracking list")
+        await interaction.response.send_message(f"Removed {repo_name} from tracking list")
+    else:
+        await interaction.response.send_message(f"{repo_name} is not in the tracking list")
 
 bot.run(botToken)
