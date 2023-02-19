@@ -60,21 +60,23 @@ async def track_file(interaction:discord.Interaction, author:str, repo_name:str)
         return
     
     data = loadData(DATA_FILE)
+    fileUrl = f"https://github.com//{author}//{repo_name}"
     if repo_name in data:
-        await interaction.response.send_message(f"{author}/{repo_name} is already tracking list")
+        await interaction.response.send_message(f"{author}/{repo_name} is already tracking list: {fileUrl}")
         return
     repo = g.get_repo(path)
     data[repo_name] = {"nodeID":f"{repo.get_commits()[0].sha}", "author":f"{author}"}
     saveData(DATA_FILE, data)
-    await interaction.response.send_message(f"Added {author}/{repo_name} to tracking list.")
+    await interaction.response.send_message(f"Added {author}/{repo_name} to tracking list: {fileUrl}")
 
 @bot.tree.command(name="untrack_file", description="Remove a file from tracking list")
 async def untrack_file(interaction:discord.Interaction, author:str, repo_name:str):
     data = loadData(DATA_FILE)
+    fileUrl = f"https://github.com//{author}//{repo_name}"
     if repo_name in data and data[repo_name]["author"] == author:
         del data[repo_name]
         saveData(DATA_FILE, data)
-        await interaction.response.send_message(f"Removed {author}/{repo_name} from tracking list")
+        await interaction.response.send_message(f"Removed {author}/{repo_name} from tracking list: {fileUrl}")
     else:
         await interaction.response.send_message(f"{author}/{repo_name} is not in the tracking list")
 
@@ -83,7 +85,8 @@ async def tracking_list(interaction:discord.Interaction):
     data = loadData(DATA_FILE)
     msgArr = []
     for repoName in data:
-        msgArr.append(f"{data[repoName]['author']}/{repoName}")
+        fileUrl = f"https://github.com//{data[repoName]['author']}//{repoName}"
+        msgArr.append(f"{fileUrl}")
     await interaction.response.send_message(f"{msgArr}")
 
 bot.run(botToken)
