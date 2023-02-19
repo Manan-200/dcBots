@@ -36,7 +36,6 @@ async def on_ready():
 
 @tasks.loop(minutes=1)
 async def printCommit():
-    global oldCommit
     for guild in bot.guilds:
         channel = discord.utils.get(guild.channels, name="git")
         if channel:
@@ -67,7 +66,7 @@ async def track_file(interaction:discord.Interaction, author:str, repo_name:str)
     repo = g.get_repo(path)
     data[repo_name] = {"nodeID":f"{repo.get_commits()[0].sha}", "author":f"{author}"}
     saveData(DATA_FILE, data)
-    await interaction.response.send_message(f"Added {repo_name} to tracking list.")
+    await interaction.response.send_message(f"Added {author}/{repo_name} to tracking list.")
 
 @bot.tree.command(name="untrack_file", description="Remove a file from tracking list")
 async def untrack_file(interaction:discord.Interaction, author:str, repo_name:str):
@@ -78,5 +77,13 @@ async def untrack_file(interaction:discord.Interaction, author:str, repo_name:st
         await interaction.response.send_message(f"Removed {author}/{repo_name} from tracking list")
     else:
         await interaction.response.send_message(f"{author}/{repo_name} is not in the tracking list")
+
+@bot.tree.command(name="tracking_list", description="Prints list of repositories being tracked")
+async def tracking_list(interaction:discord.Interaction):
+    data = loadData(DATA_FILE)
+    msgArr = []
+    for repoName in data:
+        msgArr.append(f"{data[repoName]['author']}/{repoName}")
+    await interaction.response.send_message(f"{msgArr}")
 
 bot.run(botToken)
