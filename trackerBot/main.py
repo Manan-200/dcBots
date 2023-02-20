@@ -53,7 +53,7 @@ async def printCommit():
                 
                 #Saving new commit SHA and sending message on discord
                 fileUrl = f"https://github.com/{path}"
-                await channel.send(f"New commit by '{repo.get_commits()[0].commit.author.name}' on '{repo.name}': '{repo.get_commits()[0].commit.message}' : {fileUrl}")
+                await channel.send(f"New commit by '{repo.get_commits()[0].commit.author.name}' on {fileUrl}: '{repo.get_commits()[0].commit.message}'")
                 data[path]["nodeID"] = newNodeID
                 saveData(DATA_FILE, data)
 
@@ -66,7 +66,7 @@ async def track_file(interaction:discord.Interaction, author:str, repo_name:str)
     url = f"https://api.github.com/repos/{path}"
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
-        await interaction.response.send_message(f"{author}/{repo_name} does not exist")
+        await interaction.response.send_message(f"The repository does not exist")
         return
     
     data = loadData(DATA_FILE)
@@ -75,14 +75,14 @@ async def track_file(interaction:discord.Interaction, author:str, repo_name:str)
 
     #Checking if entered repo is already in data
     if path in data:
-        await interaction.response.send_message(f"{author}/{repo_name} is already tracking list: {fileUrl}")
+        await interaction.response.send_message(f"{fileUrl} is already tracking list")
         return
 
     #Saving the repo and latest commit SHA in data file
     repo = g.get_repo(path)
     data[path] = {"nodeID":f"{repo.get_commits()[0].sha}"}
     saveData(DATA_FILE, data)
-    await interaction.response.send_message(f"Added {author}/{repo_name} to tracking list: {fileUrl}")
+    await interaction.response.send_message(f"Added {path} to tracking list")
 
 @bot.tree.command(name="untrack_file", description="Remove a file from tracking list")
 async def untrack_file(interaction:discord.Interaction, author:str, repo_name:str):
@@ -95,10 +95,10 @@ async def untrack_file(interaction:discord.Interaction, author:str, repo_name:st
     try:
         del data[path]
         saveData(DATA_FILE, data)
-        await interaction.response.send_message(f"Removed {path} from tracking list: {fileUrl}")
+        await interaction.response.send_message(f"Removed {fileUrl} from tracking list")
     #If repo doesn't exist, send error message
     except:
-        await interaction.response.send_message(f"{path} is not in the tracking list")
+        await interaction.response.send_message(f"The repository is not in the tracking list")
 
 @bot.tree.command(name="tracking_list", description="Prints list of repositories being tracked")
 async def tracking_list(interaction:discord.Interaction):
