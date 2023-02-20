@@ -36,24 +36,33 @@ async def on_ready():
 
 @tasks.loop(minutes=1)
 async def printCommit():
+    #Selecting channel to send messages
     for guild in bot.guilds:
         channel = discord.utils.get(guild.channels, name="git")
         if channel:
             data = loadData(DATA_FILE)
-            for repo_name in data:
-                repo = g.get_repo(f'{data[repo_name]["author"]}/{repo_name}')
-                oldNodeID = data[repo_name]["nodeID"]
+            #Selecting each repository path from data
+            for path in data:
+                repo = g.get_repo(f"{path}")
+                oldNodeID = data[path]["nodeID"]
                 newNodeID = repo.get_commits()[0].sha
-                if newNodeID != oldNodeID:
-                    fileUrl = f"https://github.com//{data[repo_name]['author']}//{repo_name}"
-                    await channel.send(f"New commit by '{repo.get_commits()[0].commit.author.name}' on '{repo.name}': '{repo.get_commits()[0].commit.message}' : {fileUrl}")
-                    data[repo_name]["nodeID"] = newNodeID
-                    saveData(DATA_FILE, data)
+                
+                #Comparing latest SHA with previous SHA
+                if newNodeID == oldNodeID:
+                    return
+                
+                #Saving new commit SHA and sending message on discord
+                fileUrl = f"https://github.com/{path}"
+                await channel.send(f"New commit by '{repo.get_commits()[0].commit.author.name}' on '{repo.name}': '{repo.get_commits()[0].commit.message}' : {fileUrl}")
+                data[path]["nodeID"] = newNodeID
+                saveData(DATA_FILE, data)
 
 @bot.tree.command(name="track_file", description="Add a file to tracking list")
 async def track_file(interaction:discord.Interaction, author:str, repo_name:str):
     
     path = f"{author}/{repo_name}"
+
+    #Checking is entered repo path is valid
     url = f"https://api.github.com/repos/{path}"
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
@@ -61,32 +70,45 @@ async def track_file(interaction:discord.Interaction, author:str, repo_name:str)
         return
     
     data = loadData(DATA_FILE)
-    fileUrl = f"https://github.com//{author}//{repo_name}"
-    if repo_name in data:
+
+    fileUrl = f"https://github.com/{path}"
+
+    #Checking if entered repo is already in data
+    if path in data:
         await interaction.response.send_message(f"{author}/{repo_name} is already tracking list: {fileUrl}")
         return
+
+    #Saving the repo and latest commit SHA in data file
     repo = g.get_repo(path)
-    data[repo_name] = {"nodeID":f"{repo.get_commits()[0].sha}", "author":f"{author}"}
+    data[path] = {"nodeID":f"{repo.get_commits()[0].sha}"}
     saveData(DATA_FILE, data)
     await interaction.response.send_message(f"Added {author}/{repo_name} to tracking list: {fileUrl}")
 
 @bot.tree.command(name="untrack_file", description="Remove a file from tracking list")
 async def untrack_file(interaction:discord.Interaction, author:str, repo_name:str):
+
     data = loadData(DATA_FILE)
-    fileUrl = f"https://github.com//{author}//{repo_name}"
-    if repo_name in data and data[repo_name]["author"] == author:
-        del data[repo_name]
+    path = f"{author}/{repo_name}"
+    fileUrl = f"https://github.com/{path}"
+
+    #Try to delete repo from data if it exists
+    try:
+        del data[path]
         saveData(DATA_FILE, data)
-        await interaction.response.send_message(f"Removed {author}/{repo_name} from tracking list: {fileUrl}")
-    else:
-        await interaction.response.send_message(f"{author}/{repo_name} is not in the tracking list")
+        await interaction.response.send_message(f"Removed {path} from tracking list: {fileUrl}")
+    #If repo doesn't exist, send error message
+    except:
+        await interaction.response.send_message(f"{path} is not in the tracking list")
 
 @bot.tree.command(name="tracking_list", description="Prints list of repositories being tracked")
 async def tracking_list(interaction:discord.Interaction):
+
     data = loadData(DATA_FILE)
+
+    #Printing list of URLs of all repos in data 
     msgArr = []
-    for repoName in data:
-        fileUrl = f"https://github.com//{data[repoName]['author']}//{repoName}"
+    for path in data:
+        fileUrl = f"https://github.com/{path}"
         msgArr.append(f"{fileUrl}")
     await interaction.response.send_message(f"{msgArr}")
 
