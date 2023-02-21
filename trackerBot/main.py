@@ -53,7 +53,7 @@ async def printCommit():
                 
                 #Saving new commit SHA and sending message on discord
                 fileUrl = f"https://github.com/{path}"
-                await channel.send(f"New commit by '{repo.get_commits()[0].commit.author.name}' on {fileUrl}: '{repo.get_commits()[0].commit.message}'")
+                await channel.send(f"New commit by '{repo.get_commits()[0].commit.author.name}' on {fileUrl} : '{repo.get_commits()[0].commit.message}'")
                 data[path]["nodeID"] = newNodeID
                 saveData(DATA_FILE, data)
 
