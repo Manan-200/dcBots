@@ -82,7 +82,7 @@ async def track_file(interaction:discord.Interaction, author:str, repo_name:str)
     repo = g.get_repo(path)
     data[path] = {"nodeID":f"{repo.get_commits()[0].sha}"}
     saveData(DATA_FILE, data)
-    await interaction.response.send_message(f"Added {path} to tracking list")
+    await interaction.response.send_message(f"Added {fileUrl} to tracking list")
 
 @bot.tree.command(name="untrack_file", description="Remove a file from tracking list")
 async def untrack_file(interaction:discord.Interaction, author:str, repo_name:str):
