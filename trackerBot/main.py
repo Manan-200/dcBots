@@ -49,7 +49,7 @@ async def printCommit():
                 
                 #Comparing latest SHA with previous SHA
                 if newNodeID == oldNodeID:
-                    return
+                    continue
                 
                 #Saving new commit SHA and sending message on discord
                 fileUrl = f"https://github.com/{path}"
