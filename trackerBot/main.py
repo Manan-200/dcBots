@@ -57,7 +57,7 @@ async def printCommit():
                 data[path]["nodeID"] = newNodeID
                 saveData(DATA_FILE, data)
 
-@bot.tree.command(name="track_file", description="Add a file to tracking list")
+@bot.tree.command(name="track_file", description="Add a repository to tracking list")
 async def track_file(interaction:discord.Interaction, author:str, repo_name:str):
     
     path = f"{author}/{repo_name}"
