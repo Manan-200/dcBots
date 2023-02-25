@@ -66,7 +66,7 @@ async def track_file(interaction:discord.Interaction, author:str, repo_name:str)
     url = f"https://api.github.com/repos/{path}"
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
-        await interaction.response.send_message(f"The repository does not exist")
+        await interaction.response.send_message("The repository does not exist")
         return
     
     data = loadData(DATA_FILE)
@@ -98,7 +98,7 @@ async def untrack_file(interaction:discord.Interaction, author:str, repo_name:st
         await interaction.response.send_message(f"Removed {fileUrl} from tracking list")
     #If repo doesn't exist, send error message
     except:
-        await interaction.response.send_message(f"The repository is not in the tracking list")
+        await interaction.response.send_message("The repository is not in the tracking list")
 
 @bot.tree.command(name="tracking_list", description="Prints list of repositories being tracked")
 async def tracking_list(interaction:discord.Interaction):
