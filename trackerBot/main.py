@@ -29,7 +29,6 @@ headers = {"Authorization": gitToken}
 
 g = Github(gitToken)
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
-status = cycle(["tracking repos", "tracking..."])
 
 
 @bot.event
@@ -45,9 +44,6 @@ async def on_ready():
 
 @tasks.loop(minutes=1)
 async def printCommit():
-    #Keeping the bot alive
-    async def change_status():
-        await bot.change_presence(activity=discord.Game(next(status)))
 
     #Selecting channel to send messages
     for guild in bot.guilds:
@@ -66,8 +62,10 @@ async def printCommit():
 
                 #Saving new commit SHA and sending message on discord
                 fileUrl = f"https://github.com/{path}"
+                commitMsg = repo.get_commits()[0].commit.message[:100]
+                author = repo.get_commits()[0].commit.author.name
                 await channel.send(
-                    f"New commit by '{repo.get_commits()[0].commit.author.name}' on {fileUrl} : '{repo.get_commits()[0].commit.message}'"
+                    f"New commit by '{author}' on {fileUrl} : '{commitMsg}'"
                 )
                 data[path]["nodeID"] = newNodeID
                 saveData(DATA_FILE, data)
