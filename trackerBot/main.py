@@ -1,12 +1,9 @@
 from discord.ext import commands, tasks
 from github import Github
-from itertools import cycle
+from keep_alive import keep_alive
 import json
 import discord
 import requests
-import os
-
-from keep_alive import keep_alive
 
 def loadData(filePath: str):
     try:
@@ -23,8 +20,8 @@ def saveData(filePath: str, data: dict):
 
 DATA_FILE = "data.json"
 
-gitToken = os.getenv("git")
-botToken = os.getenv("bot")
+gitToken = loadData("token.json")["git"]
+botToken = loadData("token.json")["bot"]
 headers = {"Authorization": gitToken}
 
 g = Github(gitToken)

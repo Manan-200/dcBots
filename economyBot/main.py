@@ -63,15 +63,6 @@ async def balance(interaction:discord.Interaction, member:discord.Member=None):
     breads = loadBreads(interaction.guild_id, member.id, data)
     await interaction.response.send_message(f"{member.name} has {breads} breads.")
 
-@bot.tree.command(name="guild_init", description="Initialize guild data")
-async def guild_init(interaction:discord.Interaction):
-    data = loadData(DATA_FILE)
-    members = interaction.guild.members
-    for member in members:
-        if member.bot != True:
-            loadBreads(interaction.guild.id, member.id, data)
-    await interaction.response.send_message(f"Data updated successfully")
-
 @bot.tree.command(name="gamble", description="Gamble breads!")
 async def gamble(interaction:discord.Interaction, gamble_breads:int):
     data = loadData(DATA_FILE)
@@ -118,23 +109,24 @@ async def rob(interaction:discord.Interaction, member:discord.Member):
 @bot.tree.command(name="leaderboard", description="See who has the most breads!")
 async def leaderboard(interaction:discord.Interaction):
     data = loadData(DATA_FILE)
-    
-    memberArr = []
-    breadArr = []
-    for member in interaction.guild.members:
-        if member.bot != True:
-            memberArr.append(member.name)
-            breadArr.append(loadBreads(interaction.guild.id, member.id, data))
-    
-    for i in range(len(breadArr) - 1):
-        for j in range(i, len(breadArr)):
-            if breadArr[j] > breadArr[i]:
-                breadArr[i], breadArr[j] = breadArr[j], breadArr[i]
-                memberArr[i], memberArr[j] = memberArr[j], memberArr[i]
-    guildDict = {}
-    for i in range(len(breadArr)):
-        guildDict[memberArr[i]] = breadArr[i]
+    try:
+        guildDict = data[str(interaction.guild.id)]
+    except:
+        await interaction.repsponse.send_message("Everyone has the same breads.")
+        return
 
+    values = list(guildDict.values())
+    
+    keys = list(guildDict.keys())
+    for i in range(len(values) - 1):
+        for j in range(i, len(values)):
+            if values[j] > values[i]:
+                values[i], values[j] = values[j], values[i]
+                keys[i], keys[j] = keys[j], keys[i]
+    guildDict = {}
+    for i in range(len(keys)):
+        guildDict[f"{bot.get_user(int(keys[i])).name}"] = values[i]
     await interaction.response.send_message(f"{guildDict}")
+
 
 bot.run(TOKEN)
