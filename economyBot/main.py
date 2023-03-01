@@ -1,10 +1,8 @@
-import discord
 from discord.ext import commands
+from keep_alive import keep_alive
+import discord
 import json
 import random
-
-DATA_FILE = "data.json"
-initialBreads = 100
 
 def loadData(filePath:str):
     try:
@@ -36,6 +34,8 @@ def saveBreads(guildID:discord.Interaction.guild_id, memberID:discord.Member.id,
     saveData(DATA_FILE, data)
 
 TOKEN = loadData("token.json")["token"]
+DATA_FILE = "data.json"
+initialBreads = 100
 
 bot = commands.Bot(command_prefix="!", intents = discord.Intents.all())
 
@@ -128,5 +128,5 @@ async def leaderboard(interaction:discord.Interaction):
         guildDict[f"{bot.get_user(int(keys[i])).name}"] = values[i]
     await interaction.response.send_message(f"{guildDict}")
 
-
+keep_alive()
 bot.run(TOKEN)
