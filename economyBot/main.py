@@ -52,6 +52,11 @@ async def on_ready():
 async def ping(interaction:discord.Interaction):
     await interaction.response.send_message(f"Pong! You are in {interaction.guild.name} server.")
 
+@bot.tree.command(name="help")
+async def help(interaction:discord.Interaction):
+    url = "https://github.com/Manan-200/dcBots/blob/master/economyBot/README.md"
+    await interaction.response.send_message(f"Visit {url} for more information.")
+
 @bot.tree.command(name="balance", description="Get account information of a member or yourself")
 async def balance(interaction:discord.Interaction, member:discord.Member=None):
     if member != None and member.bot:
