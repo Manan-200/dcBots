@@ -1,4 +1,5 @@
 from discord.ext import commands
+from dotenv import dotenv_values
 from keep_alive import keep_alive
 import discord
 import json
@@ -33,7 +34,8 @@ def saveBreads(guildID:discord.Interaction.guild_id, memberID:discord.Member.id,
     data[str(guildID)][str(memberID)]["breads"] = breads
     saveData(DATA_FILE, data)
 
-TOKEN = loadData("token.json")["token"]
+TOKEN = dotenv_values(".env")["TOKEN"]
+
 DATA_FILE = "data.json"
 initialBreads = 100
 
@@ -103,7 +105,7 @@ async def rob(interaction:discord.Interaction, member:discord.Member):
         await interaction.response.send_message(f"{interaction.user.name} robbed {stolenBreads} breads from {member.name}")
     elif breadPercent < 0:
         stolenBreads =  int(robberBreads*breadPercent/100)
-        await interaction.response.send_message(f"{member.name} reverse robbed {-(stolenBreads)} from {interaction.user.name}")
+        await interaction.response.send_message(f"{member.name} reverse robbed {-(stolenBreads)}breads from {interaction.user.name}")
 
     robberBreads += stolenBreads
     memberBreads -= stolenBreads
