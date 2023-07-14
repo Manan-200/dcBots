@@ -1,6 +1,5 @@
 from discord.ext import commands
 from dotenv import dotenv_values
-from keep_alive import keep_alive
 import discord
 import json
 import random
@@ -135,5 +134,4 @@ async def leaderboard(interaction:discord.Interaction):
         guildDict[f"{bot.get_user(int(keys[i])).name}"] = values[i]
     await interaction.response.send_message(f"{guildDict}")
 
-keep_alive()
 bot.run(TOKEN)
