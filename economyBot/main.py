@@ -104,7 +104,7 @@ async def rob(interaction:discord.Interaction, member:discord.Member):
         await interaction.response.send_message(f"{interaction.user.name} robbed {stolenBreads} breads from {member.name}")
     elif breadPercent < 0:
         stolenBreads =  int(robberBreads*breadPercent/100)
-        await interaction.response.send_message(f"{member.name} reverse robbed {-(stolenBreads)}breads from {interaction.user.name}")
+        await interaction.response.send_message(f"{member.name} reverse robbed {-(stolenBreads)} breads from {interaction.user.name}")
 
     robberBreads += stolenBreads
     memberBreads -= stolenBreads
@@ -118,10 +118,12 @@ async def leaderboard(interaction:discord.Interaction):
     try:
         guildDict = data[str(interaction.guild.id)]
     except:
-        await interaction.repsponse.send_message("Everyone has the same breads.")
+        await interaction.response.send_message("Everyone has the same breads.")
         return
 
-    values = list(guildDict.values())
+    values = []
+    for key in guildDict:
+        values.append(guildDict[key]["breads"])
     
     keys = list(guildDict.keys())
     for i in range(len(values) - 1):
@@ -130,8 +132,10 @@ async def leaderboard(interaction:discord.Interaction):
                 values[i], values[j] = values[j], values[i]
                 keys[i], keys[j] = keys[j], keys[i]
     guildDict = {}
-    for i in range(len(keys)):
-        guildDict[f"{bot.get_user(int(keys[i])).name}"] = values[i]
+
+    if len(keys) > 5:
+        for i in range(6):
+            guildDict[f"{bot.get_user(int(keys[i])).name}"] = values[i]
     await interaction.response.send_message(f"{guildDict}")
 
 bot.run(TOKEN)
